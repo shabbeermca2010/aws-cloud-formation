@@ -1,0 +1,603 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "vpc with 6 subnets",
+    "Parameters": {
+        "vpccidr": {
+            "Type": "String",
+            "Default": "10.10.0.0./16"
+        },
+        "subnetcidr": {
+            "Type": "CommaDelimitedList",
+            "Default": "10.10.0.0/24,10.10.1.0/24,10.10.2.0/24,10.10.3.0/24,10.10.4.0/24,10.10.5.0/24"
+        },
+        "zone1": {
+            "Description": "same zone1 for 3 subnetof1",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        },
+        "zone2": {
+            "Description": "same zone2 for 3 subnetof2",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        },
+        "keypair": {
+            "Description": "select keypair",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        }
+    },
+    "Mappings": {
+        "RegionMap": {
+            "us-east-1": {
+                "ami": "ami-08c40ec9ead489470"
+            },
+            "us-east-2": {
+                "ami": "ami-097a2df4ac947655f"
+            },
+            "us-west-1": {
+                "ami": "ami-02ea247e531eb3ce6"
+            },
+            "us-west-2": {
+                "ami": "ami-017fecd1353bcc96e"
+            },
+            "ap-south-1": {
+                "ami": "ami-062df10d14676e201"
+            }
+        }
+    },
+    "Resources": {
+        "myvpc": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {
+                    "Ref": "vpccidr"
+                },
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ntier"
+                    }
+                ]
+            }
+        },
+        "web1subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "zone1"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        0,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "web1subnet"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                }
+            }
+        },
+        "web2subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "zone2"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        1,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "web2subnet"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                }
+            }
+        },
+        "app1subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "zone1"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        2,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "app1subnet"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                }
+            }
+        },
+        "app2subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "zone2"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        3,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "app2subnet"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                }
+            }
+        },
+        "db1subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "zone1"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        4,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "db1subnet"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                }
+            }
+        },
+        "db2subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Ref": "zone2"
+                },
+                "CidrBlock": {
+                    "Fn::Select": [
+                        5,
+                        {
+                            "Ref": "subnetcidr"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "db2subnet"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                }
+            }
+        },
+        "websg": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "websg for public access",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "22",
+                        "FromPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "80",
+                        "FromPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "443",
+                        "FromPort": "443",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "web-sg"
+                    }
+                ]
+            }
+        },
+        "appsg": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "This is appsg access with in network",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "22",
+                        "FromPort": "22",
+                        "CidrIp": {
+                            "Ref": "vpccidr"
+                        }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "8080",
+                        "FromPort": "8080",
+                        "CidrIp": {
+                            "Ref": "vpccidr"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "app-sg"
+                    }
+                ]
+            }
+        },
+        "dbsg": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "This is for mysql access within network",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "3306",
+                        "FromPort": "3306",
+                        "CidrIp": {
+                            "Ref": "vpccidr"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "myvpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "db-sg"
+                    }
+                ]
+            }
+        },
+        "myigw": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "my-igw"
+                    }
+                ]
+            }
+        },
+        "AttachGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "myvpc"
+                },
+                "InternetGatewayId": {
+                    "Ref": "myigw"
+                }
+            }
+        },
+        "publicrt": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "myvpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "public-route-table"
+                    }
+                ]
+            }
+        },
+        "privatert": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "myvpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "private-route-table"
+                    }
+                ]
+            }
+        },
+        "publicrtigw": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "publicrt"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "myigw"
+                }
+            }
+        },
+        "publicweb1assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "web1subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "publicrt"
+                }
+            }
+        },
+        "publicweb2assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "web2subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "publicrt"
+                }
+            }
+        },
+        "privateapp1assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "app1subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "privatert"
+                }
+            }
+        },
+        "privateapp2assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "app2subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "privatert"
+                }
+            }
+        },
+        "privatedb1assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "db1subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "privatert"
+                }
+            }
+        },
+        "privatedb2assc": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "db2subnet"
+                },
+                "RouteTableId": {
+                    "Ref": "privatert"
+                }
+            }
+        },
+        "myDBSubnetgroup": {
+            "Type": "AWS::RDS::DBSubnetGroup",
+            "Properties": {
+                "DBSubnetGroupDescription": "description",
+                "SubnetIds": [
+                    {
+                        "Ref": "db1subnet"
+                    },
+                    {
+                        "Ref": "db2subnet"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "String",
+                        "Value": "myDB-subnet-group"
+                    }
+                ]
+            }
+        },
+        "MyDB": {
+            "Type": "AWS::RDS::DBInstance",
+            "Properties": {
+                "AllocatedStorage": "20",
+                "AllowMajorVersionUpgrade": false,
+                "AutoMinorVersionUpgrade": false,
+                "BackupRetentionPeriod": 0,
+                "DBInstanceIdentifier": "rdsfromcf",
+                "DBName": "sampleDBfromcf",
+                "DBSecurityGroups": {
+                    "Ref": "myDBSubnetgroup"
+                },
+                "Engine": "MySQL",
+                "EngineVersion": "8.0.28",
+                "MasterUsername": "root",
+                "MasterUserPassword": "rootroot",
+                "MultiAZ": "false",
+                "Port": "3306",
+                "PubliclyAccessible": "true",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "myrds-DB"
+                    }
+                ],
+                "VPCSecurityGroups": [
+                    {
+                        "Ref": "dbsg"
+                    }
+                ]
+            }
+        },
+        "webEC2": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "t2.micro",
+                "KeyName": {
+                    "Ref": "keypair"
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "RegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "ami"
+                    ]
+                },
+                "Monitoring": "false",
+                "NetworkInterfaces": [
+                    {
+                        "AssociatePublicIpAddress": true,
+                        "GroupSet": [
+                            {
+                                "Ref": "websg"
+                            }
+                        ],
+                        "SubnetId": {
+                            "Ref": "web1subnet"
+                        },
+                        "DeviceIndex": 0
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "web-EC2"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/bin/bash",
+                                "sudo apt update",
+                                "sudo apt install apache2 -y"
+                            ]
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "weburl": {
+            "Value": {
+                "Fn::Join": [
+                    "http://",
+                    {
+                        "Fn::GetAtt": [
+                            "webec2",
+                            "PublicIp"
+                        ]
+                    }
+                ]
+            }
+        },
+        "appEC2": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "InstanceType": "t2.micro",
+                "KeyName": {
+                    "Ref": "keypair"
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "RegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "ami"
+                    ]
+                },
+                "Monitoring": "false",
+                "NetworkInterfaces": [
+                    {
+                        "AssociatePublicIpAddress": true,
+                        "GroupSet": [
+                            {
+                                "Ref": "appsg"
+                            }
+                        ],
+                        "SubnetId": {
+                            "Ref": "app1subnet"
+                        },
+                        "DeviceIndex": 0
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "app-EC2"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/bin/bash",
+                                "sudo apt update",
+                                "sudo apt install apache2 -y"
+                            ]
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
